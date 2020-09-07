@@ -22,6 +22,7 @@ class SoundTracker {
   BuildContext context;
   Timer timer;
   Function serverResponseRunnable;
+  Function updateUiRunnable;
 
   SoundTracker(this.localFileSystem);
 
@@ -66,6 +67,7 @@ class SoundTracker {
       startTime = DateTime.now().millisecondsSinceEpoch;
       await this.audioRecorder.start();
       fired = true;
+      updateUiRunnable();
 
       this.currentRecording = await this.audioRecorder.current(channel: 0);
       print("QQQTimerRun");
@@ -108,6 +110,7 @@ class SoundTracker {
     fired = false;
     lastRecordedPath = null;
     currentRecording = null;
+    updateUiRunnable();
     print("QQQStoppppppppppppped");
   }
 
@@ -136,6 +139,7 @@ class SoundTracker {
       print("QQQResponse: " + response.toString());
     }
     catch(error){
+      serverResponseRunnable(error.toString());
       print("QQQError: " + error.toString());
     }
   }

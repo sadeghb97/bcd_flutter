@@ -66,10 +66,15 @@ class TrackerScreenState extends State<TrackerScreen> {
   @override
   Widget build(BuildContext context) {
     soundTracker.setContext(context);
+
     soundTracker.serverResponseRunnable = (String response){
       setState(() {
         requestStatus = response;
       });
+    };
+
+    soundTracker.updateUiRunnable = (){
+      setState(() {});
     };
 
     return new Center(
@@ -151,48 +156,11 @@ class TrackerScreenState extends State<TrackerScreen> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 10.0, bottom: 12),
-                child: new Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    SizedBox(
-                      width: 150,
-                      height: 45,
-                      child: new FlatButton(
-                        onPressed: () {
-                          if(soundTracker.fired) soundTracker.stop();
-                          else soundTracker.run();
-                        },
-                        child: Text("Tick", style: TextStyle(
-                          color: Colors.white
-                        )),
-                        color: Colors.lightBlue,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    SizedBox(
-                      width: 150,
-                      height: 45,
-                      child: new FlatButton(
-                        onPressed: () {
-                          if(soundTracker.lastRecordedPath != null)
-                            onPlayAudio(soundTracker.lastRecordedPath);
-                        },
-                        child: Text("Play", style: TextStyle(
-                            color: Colors.white
-                        )),
-                        color: Colors.lightBlue,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               new Text("Status : $_currentStatus"),
               new Text(
                   "Audio recording duration : ${_current?.duration.toString()}"),
               Padding(
-                padding: const EdgeInsets.only(top: 32.0),
+                padding: const EdgeInsets.only(top: 16.0),
                 child: new ToggleButtons(
                   children: <Widget>[
                     SizedBox(
@@ -233,11 +201,47 @@ class TrackerScreenState extends State<TrackerScreen> {
                       child: new FlatButton(
                         onPressed: requestServer,
                         child: Text(
-                          "Request"
+                            "Request"
                         ),
-                        color: (_currentStatus == RecordingStatus.Stopped && !waiting) ?
-                          Colors.pinkAccent : Colors.pink.withOpacity(0.4),
+                        color: !soundTracker.fired && (_currentStatus == RecordingStatus.Stopped && !waiting) ?
+                        Colors.pinkAccent : Colors.pink.withOpacity(0.4),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 24),
+                child: new Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    RawMaterialButton(
+                      onPressed: () {
+                        if(soundTracker.fired) soundTracker.stop();
+                        else soundTracker.run();
+                      },
+                      elevation: 4.0,
+                      fillColor: Colors.redAccent.withOpacity(0.8),
+                      child: Icon(
+                        soundTracker.fired ? Icons.stop : Icons.mic,
+                        size: 35.0,
+                      ),
+                      padding: EdgeInsets.all(15.0),
+                      shape: CircleBorder(),
+                    ),
+                    RawMaterialButton(
+                      onPressed: () {
+                        if(soundTracker.lastRecordedPath != null)
+                          onPlayAudio(soundTracker.lastRecordedPath);
+                      },
+                      elevation: 4.0,
+                      fillColor: Colors.redAccent.withOpacity(0.8),
+                      child: Icon(
+                        soundTracker.lastRecordedPath != null ? Icons.play_arrow : Icons.close,
+                        size: 35.0,
+                      ),
+                      padding: EdgeInsets.all(15.0),
+                      shape: CircleBorder(),
                     ),
                   ],
                 ),
