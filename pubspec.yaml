@@ -33,6 +33,7 @@ dependencies:
   path_provider: ^1.6.14
   permission_handler: ^5.0.1+1
   dio: ^3.0.10
+  intervalprogressbar: ^2.0.1
 
 dev_dependencies:
   flutter_test:

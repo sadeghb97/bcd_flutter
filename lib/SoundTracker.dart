@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
+import 'dart:convert';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
+import 'Constants.dart';
 
 class SoundTracker {
   LocalFileSystem localFileSystem;
@@ -24,6 +25,10 @@ class SoundTracker {
   Function serverResponseRunnable;
   Function updateUiRunnable;
 
+  String lastResponseMessage;
+  List signalsResult;
+  List modelsResult = new List(DETECTOR_MODELS.length);
+
   SoundTracker(this.localFileSystem);
 
   setContext(BuildContext context){
@@ -31,6 +36,7 @@ class SoundTracker {
   }
 
   init() async {
+    print("QQQKhdddddddddddddd");
     try {
       if (await FlutterAudioRecorder.hasPermissions) {
         String customPath = '/flutter_audio_recorder_';
@@ -50,7 +56,6 @@ class SoundTracker {
 
         await this.audioRecorder.initialized;
         this.currentRecording = await this.audioRecorder.current(channel: 0);
-        print("QQQInitDone");
       }
       else {
         Scaffold.of(context).showSnackBar(
@@ -70,37 +75,23 @@ class SoundTracker {
       updateUiRunnable();
 
       this.currentRecording = await this.audioRecorder.current(channel: 0);
-      print("QQQTimerRun");
-
       const tick = const Duration(milliseconds: 10000);
 
       this.timer = new Timer(tick, () async {
-        print("QQQT.......................");
-
         endTime = DateTime.now().millisecondsSinceEpoch;
         var result = await this.audioRecorder.stop();
-        print("QQQResultPath: " + result.path);
         File file = this.localFileSystem.file(result.path);
-        print("QQQStop recording: ${result.path}");
-        print("QQQStop recording: ${result.duration}");
-        print("QQQ File length: ${await file.length()}");
-
         this.currentRecording = result;
         this.lastRecordedPath = result.path;
-        print("QQQTickkkkkkkkkkkkkkkkkk");
 
         this.audioRecorder = null;
         this.currentRecording = null;
-        print("QQQTickTwoooooooooooooooooo");
 
         requestServer(lastRecordedPath, startTime, endTime);
         run();
       });
     } catch (e) {
-      print("QQQOccured!");
-      print("QQQffffffffffffff");
       print("QQQERRRR: " + e.toString());
-      print("QQQEr: " + e);
     }
   }
 
@@ -134,12 +125,51 @@ class SoundTracker {
       Response response = await dio.post("predict/", data: formData);
 
       var encoder = new JsonEncoder.withIndent("    ");
-      String requestStatus = encoder.convert(response.data);
-      serverResponseRunnable(requestStatus);
+      lastResponseMessage = encoder.convert(response.data);
       print("QQQResponse: " + response.toString());
+
+      modelsResult = new List();
+      if(response.data.containsKey("result")){
+        signalsResult = new List();
+        response.data['result']['signals'].forEach((v) {
+          signalsResult.add(v['cry']);
+        });
+
+        List svcPreds = new List();
+        response.data['result']['svc']['signals'].forEach((v) {
+          svcPreds.add(v['confidence']);
+        });
+        modelsResult.add(svcPreds);
+
+        List svcV1Preds = new List();
+        response.data['result']['svc_v1']['signals'].forEach((v) {
+          svcV1Preds.add(v['confidence']);
+        });
+        modelsResult.add(svcV1Preds);
+
+        List linSvcPreds = new List();
+        response.data['result']['linsvc']['signals'].forEach((v) {
+          linSvcPreds.add(v['confidence']);
+        });
+        modelsResult.add(linSvcPreds);
+
+        List mlpPreds = new List();
+        response.data['result']['mlp']['signals'].forEach((v) {
+          mlpPreds.add(v['confidence']);
+        });
+        modelsResult.add(mlpPreds);
+      }
+      else {
+        //Error
+      }
+
+      serverResponseRunnable(lastResponseMessage);
     }
     catch(error){
-      serverResponseRunnable(error.toString());
+      signalsResult = null;
+      modelsResult = new List(DETECTOR_MODELS.length);
+      lastResponseMessage = error.toString();
+      serverResponseRunnable(lastResponseMessage);
       print("QQQError: " + error.toString());
     }
   }
