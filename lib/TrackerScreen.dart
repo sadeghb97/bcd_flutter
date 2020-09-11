@@ -144,7 +144,10 @@ class TrackerScreenState extends State<TrackerScreen> {
   Widget buildChart(List signals, String title, double width, double height, int max) {
     double padding = width / 6;
 
-    if(signals == null) signals = [-1, -1, -1, -1, -1, -1];
+    if(signals == null) {
+      var tmp = {'prediction': 0, 'cry': -1};
+      signals = [tmp, tmp, tmp, tmp, tmp, tmp];
+    }
 
     Widget chartWidget = Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -153,11 +156,11 @@ class TrackerScreenState extends State<TrackerScreen> {
           padding: EdgeInsets.symmetric(horizontal: padding),
           child: IntervalProgressBar(
             direction: IntervalProgressDirection.vertical,
-            max: value >= 0 ? max : 1,
-            progress: value >= 0 ? (value * max).round() : 0,
+            max: value['cry'] >= 0 ? max : 1,
+            progress: value['cry'] >= 0 ? (value['cry'] * max).round() : 0,
             intervalSize: 2,
             size: Size(width, height),
-            highlightColor: Colors.red,
+            highlightColor: value['prediction'] > 0 ? Colors.red : Colors.amber,
             defaultColor: Colors.grey,
             intervalColor: Colors.transparent,
             intervalHighlightColor: Colors.transparent,

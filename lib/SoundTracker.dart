@@ -26,7 +26,7 @@ class SoundTracker {
   Function updateUiRunnable;
 
   String lastResponseMessage;
-  List signalsResult;
+  List<Map <String, double>> signalsResult;
   List modelsResult = new List(DETECTOR_MODELS.length);
 
   SoundTracker(this.localFileSystem);
@@ -132,30 +132,30 @@ class SoundTracker {
       if(response.data.containsKey("result")){
         signalsResult = new List();
         response.data['result']['signals'].forEach((v) {
-          signalsResult.add(v['cry']);
+          signalsResult.add({'prediction': v['prediction'].toDouble(), 'cry': v['cry'].toDouble()});
         });
 
-        List svcPreds = new List();
+        List<Map <String, double>> svcPreds = new List();
         response.data['result']['svc']['signals'].forEach((v) {
-          svcPreds.add(v['confidence']);
+          svcPreds.add({'prediction': v['prediction'].toDouble(), 'cry': v['confidence'].toDouble()});
         });
         modelsResult.add(svcPreds);
 
-        List svcV1Preds = new List();
+        List<Map <String, double>> svcV1Preds = new List();
         response.data['result']['svc_v1']['signals'].forEach((v) {
-          svcV1Preds.add(v['confidence']);
+          svcV1Preds.add({'prediction': v['prediction'].toDouble(), 'cry': v['confidence'].toDouble()});
         });
         modelsResult.add(svcV1Preds);
 
-        List linSvcPreds = new List();
+        List<Map <String, double>> linSvcPreds = new List();
         response.data['result']['linsvc']['signals'].forEach((v) {
-          linSvcPreds.add(v['confidence']);
+          linSvcPreds.add({'prediction': v['prediction'].toDouble(), 'cry': v['confidence'].toDouble()});
         });
         modelsResult.add(linSvcPreds);
 
-        List mlpPreds = new List();
+        List<Map <String, double>> mlpPreds = new List();
         response.data['result']['mlp']['signals'].forEach((v) {
-          mlpPreds.add(v['confidence']);
+          mlpPreds.add({'prediction': v['prediction'].toDouble(), 'cry': v['confidence'].toDouble()});
         });
         modelsResult.add(mlpPreds);
       }
